@@ -11,6 +11,13 @@
       console.log(document);
       console.log(document.referer);
       console.log(window.opener);
+      window.addEventListener("message", receiveMessage, false);
+
+      function receiveMessage(event)
+      {
+       
+        console.log(event.data);
+      }
     </script>
   </head>
   <body>
