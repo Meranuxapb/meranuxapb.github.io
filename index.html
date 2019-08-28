@@ -6,7 +6,14 @@
 
     <script>
       console.log('childFrame readyState: ', document.readyState);
-      document.addEventListener('readystatechange', function() { console.log('childFrame readystatechange', document.readyState) });
+      document.addEventListener('readystatechange', function() {
+        console.log('childFrame readystatechange', document.readyState);
+        if (document.readyState !== 'loading') {
+          var button = document.querySelector('button');
+          button.addEventListener('click', sendClickToRelap);
+        }
+      });
+
       function sendClickToRelap() {
         try {
           window.parent.postMessage(JSON.stringify({
@@ -16,9 +23,6 @@
           console.warn(e);
         }
        }
-
-      var button = document.querySelector('button');
-      button.addEventListener('click', sendClickToRelap);
     </script>
   </head>
   <body>
