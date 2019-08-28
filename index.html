@@ -5,24 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     <script>
-      console.log(this);
-      console.log(window.location);
-      console.log(this.frameElement);
-      console.log(document);
-      console.log(document.referer);
-      console.log(window.opener);
-      console.log(window.parent.location);
-      window.addEventListener("message", receiveMessage, false);
+      console.log('childFrame readyState: ', document.readyState);
+      document.addEventListener('readystatechange', function() { console.log('childFrame readystatechange', document.readyState) });
+      function sendClickToRelap() {
+        try {
+          window.parent.postMessage(JSON.stringify({
+            "eventType": "relapCustomIframeChildIframeClick",
+          }), '*');
+        } catch(e) {
+          console.warn(e);
+        }
+       }
 
-      function receiveMessage(event)
-      {
-        console.log('Recieved message:');
-        console.log(event.data);
-      }
+      var button = document.querySelector('button');
+      button.addEventListener('click', sendClickToRelap);
     </script>
   </head>
   <body>
-    <article>
-    </article>
+    <button>Отправить сообщение о клике</button>
   </body>
 </html>
