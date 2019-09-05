@@ -14,7 +14,7 @@
         width: 100%;
         height: 100%;
         font-family: 'Roboto', sans-serif;
-        background: #6dd0ff;
+        background: #875ed7;
       }
       html {
         /* 10px при vw = 1280px */
@@ -40,30 +40,8 @@
         color: #fff;
       }
     </style>
-    <script>
-      console.log('childFrame readyState: ', document.readyState);
-      document.addEventListener('readystatechange', function() {
-        console.log('childFrame readystatechange', document.readyState);
-        if (document.readyState !== 'loading') {
-          var link = document.querySelector('#target');
-          link.addEventListener('click', sendClickToRelap);
-        }
-      });
-
-      function sendClickToRelap() {
-        try {
-          window.parent.postMessage(JSON.stringify({
-            "eventType": "relapCustomIframeChildIframeClick",
-          }), '*');
-        } catch(e) {
-          console.warn(e);
-        }
-       }
-    </script>
   </head>
   <body>
-    <a id="target" href="https://meranuxapb.github.io/target.html" target="_blank" rel="noopener noreferrer">
-      <div class="text">Здесь могла быть ваша реклама.</div>
-    </a>
+    <div class="text">Спасибо.</div>
   </body>
 </html>
