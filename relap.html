@@ -19,7 +19,84 @@
     </style>
   </head>
   <body>
-    <div class="js-relap-anchor" data-relap-id="F-gXY6Ji6hji2MrK"></div>
-    <script type="text/javascript" async="" src="https://pre2.relap.io/v7/relap.js" data-relap-token="HmYetzO3w5NuyLey" data-relap-url="https://muz-tv.ru/news/pamela-anderson-viktoriya-bekhem-lera-kudryavceva-10-zvezd-kotorye-izbavilis-ot-grudnyh-implantov/#test-banner-223-for-6"></script>
+    <script>
+      // var qs = (function(a) {
+      //   if (a == "") return {};
+      //   var b = {};
+      //   for (var i = 0; i < a.length; ++i) {
+      //     var p=a[i].split('=', 2);
+      //     if (p[1]) p[1] = decodeURIComponent(p[1].replace(/\+/g, " "));
+      //     b[p[0]] = p[1];
+      //   }
+      //   return b;
+      // })(window.location.search.substr(1).split('&'));
+
+      // var domain = qs['domain'] || 'relap.io';
+      // var token  = qs['token']  || 'G9mgi6svC_YLf3p_';
+
+      // var script     = document.createElement('script');
+      // var advUri     = window.location.toString();
+      // var SCRIPT_SRC = 'https://' + domain + '/api/v6/head.js?token=' + token + '&url=' + encodeURIComponent(advUri);
+      // var APPEND_TO  = document.head;
+
+      // if(advUri.indexOf('.testv7.') != -1) {
+      //   advUri = advUri.replace('testv7', 'test');
+      //   script.setAttribute("data-relap-url", advUri);
+      //   script.setAttribute("data-relap-token", token);
+      //   script.setAttribute('async', '');
+
+      //   SCRIPT_SRC = 'https://' + domain + '/v7/relap.js';
+      //   APPEND_TO = document.body;
+      // }
+
+      // script.src = SCRIPT_SRC;
+      // APPEND_TO.appendChild(script);
+
+      const url = new URL(window.location.href);
+      const relapToken = url.searchParams.get('token') || 'HmYetzO3w5NuyLey';
+      const relapUrl = url.searchParams.get('url') || 'https://muz-tv.ru/news/pamela-anderson-viktoriya-bekhem-lera-kudryavceva-10-zvezd-kotorye-izbavilis-ot-grudnyh-implantov/#test-banner-223-for-6';
+      const domain = url.searchParams.get('domain') || 'https://pre2.relap.io';
+      const widgetId = url.searchParams.get('widgetId') || 'F-gXY6Ji6hji2MrK';
+      const src = getSrc(domain);
+      function getSrc(domain) {
+        if (domain.indexOf('localhost') === -1) {
+          return domain + '/v7/relap.js';
+        }
+
+        return domain + '/dist/relap.js';
+      }
+      const script = document.createElement('script');
+      script.src = src;
+      script.dataset.relapUrl = relapUrl;
+      script.dataset.relapToken = relapToken;
+      script.onload = function() {
+        if (widgetId) {
+          window.relapTasks = window.relapTasks || [];
+          window.relapTasks.push(function(relapAPI) {
+            try {
+              var anchor = addAnchor(widgetId);
+              relapAPI.addWidget({
+                anchorEl: anchor,
+                cfgId: widgetId,
+              });
+            } catch (e) {
+              console.log(e);
+            }
+          });
+        }
+      };
+      script.onerror = function(e) {
+        console.log(e);
+      };
+      document.body.appendChild(script);
+      function addAnchor(id) {
+        var anchor = document.createElement('div');
+        anchor.dataset.relapId = id;
+        anchor.className = 'js-relap-anchor';
+        document.body.appendChild(anchor);
+      }
+    </script>
+    <!-- <div class="js-relap-anchor" data-relap-id="F-gXY6Ji6hji2MrK"></div>
+    <script type="text/javascript" async="" src="https://pre2.relap.io/v7/relap.js" data-relap-token="HmYetzO3w5NuyLey" data-relap-url="https://muz-tv.ru/news/pamela-anderson-viktoriya-bekhem-lera-kudryavceva-10-zvezd-kotorye-izbavilis-ot-grudnyh-implantov/#test-banner-223-for-6"></script> -->
   </body>
 </html>
