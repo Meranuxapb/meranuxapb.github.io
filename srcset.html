@@ -15,29 +15,57 @@
     display: block;
     width: 100%;
     height: auto;
+    margin: 0 auto;
+  }
+
+  .image1 {
+    width: 75%;
+  }
+
+  .section {
+    margin: 40px 0;
   }
 </style>
 <body>
-  <img id="test-image"
-    srcset="
-      https://via.placeholder.com/1920x1080.jpg 1920w,
-      https://via.placeholder.com/1440x810.jpg 1440w,
-      https://via.placeholder.com/1280x720.jpg 1280w,
-      https://via.placeholder.com/960x540.jpg 960w,
-      https://via.placeholder.com/640x360.jpg 640w,
-      https://via.placeholder.com/320x180.jpg 320w
-    "
-    sizes="100vw"
-    src="https://via.placeholder.com/1280x720.jpg"
-    alt="Placeholder"
-  />
+  <div class="section">
+    <img id="test-image"
+      srcset="
+        https://via.placeholder.com/1920x1080.jpg 1920w,
+        https://via.placeholder.com/1440x810.jpg 1440w,
+        https://via.placeholder.com/1280x720.jpg 1280w,
+        https://via.placeholder.com/960x540.jpg 960w,
+        https://via.placeholder.com/640x360.jpg 640w,
+        https://via.placeholder.com/320x180.jpg 320w
+      "
+      sizes="100vw"
+      src="https://via.placeholder.com/1280x720.jpg"
+      alt="Placeholder"
+    />
+  </div>
+  <div class="section">
+    <img class="image1"
+      srcset="
+        https://via.placeholder.com/1800x900.jpg 1920w,
+        https://via.placeholder.com/1200x600.jpg 1440w,
+        https://via.placeholder.com/900x450.jpg 1280w,
+        https://via.placeholder.com/600x300.jpg 960w,
+        https://via.placeholder.com/300x150.jpg 640w,
+      "
+      sizes="75vw"
+      src="https://via.placeholder.com/1200x600.jpg"
+      alt="Placeholder"
+    />
+  </div>
   <div id="debug-info"></div>
   <script>
     console.log('pixel ratio: ', window.devicePixelRatio);
     const imgEl = document.getElementById('test-image');
     imgEl.addEventListener('load', handleImageLoad);
+    const debugInfo = document.getElementById('debug-info');
     function handleImageLoad() {
       console.log('imgEl current source: ', imgEl.currentSrc);
+      console.log('imgEl naturalWidth: 'imgEl.naturalWidth);
+      console.log('imgEl naturalHeight: 'imgEl.naturalHeight);
     }
   </script>
 </body>
