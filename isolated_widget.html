@@ -170,6 +170,7 @@
           var prevHeight = 0;
 
           function handleIframeHeight(height) {
+            console.log('handleIframeHeight', height);
             sendMessage('heightChange', {
               height: height,
             });
@@ -206,6 +207,7 @@
         }
 
         function onIframeLoad() {
+          console.log('onIframeLoad', iframeEl);
           if (
             !iframeEl.contentWindow ||
             iframeEl.contentWindow.document.readyState !== 'complete'
