@@ -41,12 +41,13 @@
         console.log('Inner: handle post message', event.data, event.source);
       }
 
-      function sendMessage (type, payload) {
+      function sendMessage(type, payload) {
         var data = JSON.stringify({
           target: 'ISOLATED_WIDGET',
           type: type,
           payload: payload,
         });
+        console.log('Inner: send message: ', data);
         window.parent.postMessage(data, '*');
       };
 
