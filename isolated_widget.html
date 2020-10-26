@@ -44,9 +44,19 @@
 
       const createMessageSender = (messageType) => (data) => {
         window.postMessage(JSON.stringify({
+          target: 'ISOLATED_WIDGET',
           messageType,
           params: data,
         }), "*");
+      };
+
+      function sendMessage (type, payload) {
+        var data = JSON.stringify({
+          target: 'ISOLATED_WIDGET',
+          type: type,
+          payload: payload,
+        });
+        window.parent.postMessage(data, '*');
       };
 
       init();
@@ -85,8 +95,8 @@
             api.addWidget({
               cfgId: widgetId,
               events: {
-                onReady: createMessageSender('onReady'),
-                onNoContent: createMessageSender('onNoContent'),
+                onReady: createMessageSender('widgetReady'),
+                onNoContent: createMessageSender('widgetNoContent'),
               },
             });
           }
@@ -119,14 +129,6 @@
         return paramsObj;
       };
       
-      function sendMessage (type, payload) {
-        var data = JSON.stringify({
-          type: type,
-          payload: payload,
-        });
-        window.parent.postMessage(data, '*');
-      };
-
       function listenToMessages () {
         function onMessage(e) {
           var data;
@@ -137,7 +139,7 @@
             console.log(err);
           }
 
-          if (!data || recId !== data.recId) return;
+          if (!data || !data.target === 'ISOLATED_WIDGET') return;
 
           switch (data.type) {
             case 'initialParams':
