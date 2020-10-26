@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Relap</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- <meta
+      http-equiv="Content-Security-Policy"
+      content="
+      media-src https://cdn.relap.org/ data:;
+      default-src 'self';
+      frame-src https://www.google.com;
+      style-src 'unsafe-inline' fonts.googleapis.com;
+      font-src *;
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://relap.io;
+      connect-src 'self' https://relap.io https://*.relap.io;
+      img-src * data: blob:; object-src 'none'"
+    /> -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+      frame-src *;"
+    />
+    <link
+      rel="shortcut icon"
+      type="image/png"
+      href="./src/images/favicon.png"
+    />
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const rootEl = document.getElementById('root');
+      window.addEventListener('message', handlePostMessage);
+
+      function handlePostMessage(event) {
+        
+        console.log('Inner: handle post message', event.data, event.source);
+      }
+
+      const createMessageSender = (messageType) => (data) => {
+        window.postMessage(JSON.stringify({
+          messageType,
+          params: data,
+        }), "*");
+      };
+
+      init();
+
+      function init() {
+        var params = getParamsFromSearchString(window.location.search.substr(1));
+        const { token, url, widgetId, widgetType } = params;
+        
+        if (!widgetId || !token || !url) return;
+
+        document.body.style.margin = '0';
+        document.body.style.height = '0';
+
+        rootEl.style.position = 'relative';
+        rootEl.style.overflow = 'hidden';
+
+        addResizeInformer(rootEl, null, sendMessage);
+
+        const anchor = getAnchorEl(widgetId, widgetType);
+        rootEl.append(anchor);
+
+        addWidget({
+          token,
+          url,
+          widgetId,
+        });
+      }
+
+      function addWidget({ token, url, widgetId }) {
+        var w = window;
+        var d = w.document;
+
+        w.relapTasks = w.relapTasks || [];
+        w.relapTasks.push(function(api) {
+          function addWidget() {
+            api.addWidget({
+              cfgId: widgetId,
+              events: {
+                onReady: createMessageSender('onReady'),
+                onNoContent: createMessageSender('onNoContent'),
+              },
+            });
+          }
+
+          if (api.isReady) return addWidget();
+
+          console.log('init api', token, url);
+
+          api.init({
+              token: token,
+              url: url,
+            })
+            .then(addWidget);
+        });
+
+        if (!d.querySelector('.relap-runtime-iframe')) {
+          var s = d.createElement('script');
+          s.src = 'https://relap.io/v7/relap.js';
+          d.body.appendChild(s);
+        }
+      }
+
+      function getParamsFromSearchString(searchString) {
+        var params = new URLSearchParams(window.location.search.substr(1));
+        var paramsObj = {};
+        for (var param of params) {
+          paramsObj[param[0]] = param[1];
+        };
+
+        return paramsObj;
+      };
+      
+      function sendMessage (type, payload) {
+        var data = JSON.stringify({
+          type: type,
+          payload: payload,
+        });
+        console.log('window', window.parent.location);
+        window.parent.postMessage(data, '*');
+      };
+
+      function listenToMessages () {
+        function onMessage(e) {
+          var data;
+
+          try {
+            data = JSON.parse(e.data);
+          } catch (err) {
+            console.log(err);
+          }
+
+          if (!data || recId !== data.recId) return;
+
+          switch (data.type) {
+            case 'initialParams':
+              window.relapObj.rec = data.payload.rec;
+              if (window.onRelapInit) {
+                window.onRelapInit(
+                  window.relapObj,
+                  data.payload.isInViewport,
+                  data.payload.extCfgsDataStorage,
+                );
+              }
+              break;
+            case 'inViewportChange':
+              if (window.onRelapInViewportChange) {
+                window.onRelapInViewportChange(data.payload.isInViewport);
+              }
+              break;
+          }
+        }
+
+        window.addEventListener('message', onMessage);
+      }
+
+      function addResizeInformer(
+        wrapperEl,
+        recId,
+        sendMessage,
+        arWidth,
+        arHeight,
+      ) {
+        function createBodyResizeHandler() {
+          var prevHeight = 0;
+
+          function handleIframeHeight(height) {
+            sendMessage('heightChange', {
+              height: height,
+            });
+          }
+
+          return function (wrapperEl) {
+            var currentHeight = 0;
+
+            if (arWidth && arHeight) {
+              currentHeight = (wrapperEl.offsetWidth * arHeight) / arWidth;
+            } else {
+              currentHeight = wrapperEl.offsetHeight;
+            }
+
+            if (prevHeight === currentHeight) return;
+
+            handleIframeHeight(currentHeight);
+
+            prevHeight = currentHeight;
+          };
+        }
+
+        var onResize = createBodyResizeHandler();
+        var iframeEl = document.createElement('iframe');
+        iframeEl.setAttribute('frameborder', 'no');
+        iframeEl.setAttribute(
+          'style',
+          'display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; pointer-events: none; z-index: -1000;',
+        );
+        iframeEl.src = 'javascript:""';
+
+        function handleResize() {
+          onResize(wrapperEl);
+        }
+
+        function onIframeLoad() {
+          if (
+            !iframeEl.contentWindow ||
+            iframeEl.contentWindow.document.readyState !== 'complete'
+          ) {
+            return;
+          }
+          if (!iframeEl.contentWindow.initialized) {
+            iframeEl.contentWindow.addEventListener('resize', handleResize);
+
+            sendMessage({
+              type: 'initialized',
+            });
+
+            iframeEl.contentWindow.initialized = true;
+          }
+
+          handleResize();
+        }
+
+        iframeEl.onload = onIframeLoad;
+
+        rootEl.appendChild(iframeEl);
+        onIframeLoad();
+      }
+
+      function getAnchorEl(id, type) {
+        var anchorEl = document.createElement('div');
+        anchorEl.dataset.relapId = id;
+        anchorEl.className = getAnchorClassByType(type);
+        return anchorEl;
+      }
+
+      function getAnchorClassByType(type) {
+        var classByType = {
+          default: 'js-relap-anchor',
+          form: 'js-relap-form-anchor',
+        };
+        return classByType[type] || classByType.default;
+      }
+    </script>
+  </body>
+</html>
