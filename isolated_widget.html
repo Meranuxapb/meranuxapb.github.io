@@ -19,7 +19,7 @@
     <div id="root"></div>
     <script>
       const rootEl = document.getElementById('root');
-
+      let handleResize = () => {};
       init();
 
       function init() {
@@ -34,8 +34,7 @@
         rootEl.style.position = 'relative';
         rootEl.style.overflow = 'hidden';
 
-        var handleResize = addResizeInformer(rootEl, null, sendMessage);
-
+        handleResize = addResizeInformer(rootEl, null, sendMessage);
         const anchor = getAnchorEl(widgetId, widgetType);
         rootEl.append(anchor);
 
