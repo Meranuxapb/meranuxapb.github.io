@@ -34,7 +34,7 @@
         rootEl.style.position = 'relative';
         rootEl.style.overflow = 'hidden';
 
-        addResizeInformer(rootEl, null, sendMessage);
+        var handleResize = addResizeInformer(rootEl, null, sendMessage);
 
         const anchor = getAnchorEl(widgetId, widgetType);
         rootEl.append(anchor);
@@ -55,7 +55,8 @@
         window.parent.postMessage(data, '*');
       };
 
-      const createMessageSender = (type) => (data) => {
+      const createWidgetEventHandler = (type) => (data) => {
+        handleResize();
         sendMessage(type, data);
       };
 
@@ -69,8 +70,8 @@
             api.addWidget({
               cfgId: widgetId,
               events: {
-                onReady: createMessageSender('widgetReady'),
-                onNoContent: createMessageSender('widgetNoContent'),
+                onReady: createWidgetEventHandler('widgetReady'),
+                onNoContent: createWidgetEventHandler('widgetNoContent'),
               },
             });
           }
@@ -169,8 +170,8 @@
         rootEl.appendChild(iframeEl);
         onIframeLoad();
         // Проблемы с срабатыванием resize, перестраховка.
-        //repeatCall(handleResize, 1000, 10);
-
+        // repeatCall(handleResize, 1000, 10);
+        return handleResize;
       }
 
       function repeatCall(func, interval = 1000, repeats = 1) {
