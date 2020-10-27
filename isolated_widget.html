@@ -10,18 +10,6 @@
     <div id="root"></div>
     <script>
       const rootEl = document.getElementById('root');
-      window.addEventListener('message', handlePostMessage);
-
-      function handlePostMessage(event) {
-        console.log('Inner: handle post message', event.data, event.source);
-      }
-
-      const createMessageSender = (messageType) => (data) => {
-        window.postMessage(JSON.stringify({
-          messageType,
-          params: data,
-        }), "*");
-      };
 
       init();
 
@@ -49,6 +37,19 @@
         });
       }
 
+      function sendMessage(type, payload) {
+        var data = JSON.stringify({
+          type: type,
+          payload: payload,
+        });
+        console.log('Inner: send message: ', data);
+        window.parent.postMessage(data, '*');
+      };
+
+      const createMessageSender = (type) => (data) => {
+        sendMessage(type, data);
+      };
+
       function addWidget({ token, url, widgetId }) {
         var w = window;
         var d = w.document;
@@ -59,15 +60,13 @@
             api.addWidget({
               cfgId: widgetId,
               events: {
-                onReady: createMessageSender('onReady'),
-                onNoContent: createMessageSender('onNoContent'),
+                onReady: createMessageSender('widgetReady'),
+                onNoContent: createMessageSender('widgetNoContent'),
               },
             });
           }
 
           if (api.isReady) return addWidget();
-
-          console.log('init api', token, url);
 
           api.init({
               token: token,
@@ -93,49 +92,6 @@
         return paramsObj;
       };
       
-      function sendMessage (type, payload) {
-        var data = JSON.stringify({
-          type: type,
-          payload: payload,
-        });
-        console.log('window', window.parent.location);
-        window.parent.postMessage(data, '*');
-      };
-
-      function listenToMessages () {
-        function onMessage(e) {
-          var data;
-
-          try {
-            data = JSON.parse(e.data);
-          } catch (err) {
-            console.log(err);
-          }
-
-          if (!data || recId !== data.recId) return;
-
-          switch (data.type) {
-            case 'initialParams':
-              window.relapObj.rec = data.payload.rec;
-              if (window.onRelapInit) {
-                window.onRelapInit(
-                  window.relapObj,
-                  data.payload.isInViewport,
-                  data.payload.extCfgsDataStorage,
-                );
-              }
-              break;
-            case 'inViewportChange':
-              if (window.onRelapInViewportChange) {
-                window.onRelapInViewportChange(data.payload.isInViewport);
-              }
-              break;
-          }
-        }
-
-        window.addEventListener('message', onMessage);
-      }
-
       function addResizeInformer(
         wrapperEl,
         recId,
@@ -153,13 +109,10 @@
           }
 
           return function (wrapperEl) {
+            console.log('onResize');
             var currentHeight = 0;
 
-            if (arWidth && arHeight) {
-              currentHeight = (wrapperEl.offsetWidth * arHeight) / arWidth;
-            } else {
-              currentHeight = wrapperEl.offsetHeight;
-            }
+            currentHeight = wrapperEl.offsetHeight;
 
             if (prevHeight === currentHeight) return;
 
@@ -212,6 +165,7 @@
       }
 
       function repeatCall(func, interval = 1000, repeats = 1) {
+        console.log('repeatCall');
         var i = 0;
         var timer = setInterval(call, interval);
         function call() {
