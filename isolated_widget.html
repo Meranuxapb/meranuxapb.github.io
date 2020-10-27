@@ -2,34 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Relap</title>
+    <title>Isolated Relap widget</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- <meta
-      http-equiv="Content-Security-Policy"
-      content="
-      media-src https://cdn.relap.org/ data:;
-      default-src 'self';
-      frame-src https://www.google.com;
-      style-src 'unsafe-inline' fonts.googleapis.com;
-      font-src *;
-      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://relap.io;
-      connect-src 'self' https://relap.io https://*.relap.io;
-      img-src * data: blob:; object-src 'none'"
-    /> -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="
-      frame-src *;"
-    />
-    <link
-      rel="shortcut icon"
-      type="image/png"
-      href="./src/images/favicon.png"
-    />
-    <style>
-      
-    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -41,18 +16,11 @@
         console.log('Inner: handle post message', event.data, event.source);
       }
 
-      function sendMessage(type, payload) {
-        var data = JSON.stringify({
-          target: 'ISOLATED_WIDGET',
-          type: type,
-          payload: payload,
-        });
-        console.log('Inner: send message: ', data);
-        window.parent.postMessage(data, '*');
-      };
-
-      const createMessageSender = (type) => (data) => {
-        sendMessage(type, data);
+      const createMessageSender = (messageType) => (data) => {
+        window.postMessage(JSON.stringify({
+          messageType,
+          params: data,
+        }), "*");
       };
 
       init();
@@ -91,8 +59,8 @@
             api.addWidget({
               cfgId: widgetId,
               events: {
-                onReady: createMessageSender('widgetReady'),
-                onNoContent: createMessageSender('widgetNoContent'),
+                onReady: createMessageSender('onReady'),
+                onNoContent: createMessageSender('onNoContent'),
               },
             });
           }
@@ -125,6 +93,15 @@
         return paramsObj;
       };
       
+      function sendMessage (type, payload) {
+        var data = JSON.stringify({
+          type: type,
+          payload: payload,
+        });
+        console.log('window', window.parent.location);
+        window.parent.postMessage(data, '*');
+      };
+
       function listenToMessages () {
         function onMessage(e) {
           var data;
@@ -135,7 +112,7 @@
             console.log(err);
           }
 
-          if (!data || !data.target === 'ISOLATED_WIDGET') return;
+          if (!data || recId !== data.recId) return;
 
           switch (data.type) {
             case 'initialParams':
@@ -170,7 +147,6 @@
           var prevHeight = 0;
 
           function handleIframeHeight(height) {
-            console.log('handleIframeHeight', height);
             sendMessage('heightChange', {
               height: height,
             });
@@ -207,7 +183,6 @@
         }
 
         function onIframeLoad() {
-          console.log('onIframeLoad', iframeEl);
           if (
             !iframeEl.contentWindow ||
             iframeEl.contentWindow.document.readyState !== 'complete'
@@ -231,6 +206,19 @@
 
         rootEl.appendChild(iframeEl);
         onIframeLoad();
+        // Проблемы с срабатыванием resize, перестраховка.
+        repeatCall(handleResize, 1000, 10);
+
+      }
+
+      function repeatCall(func, interval = 1000, repeats = 1) {
+        var i = 0;
+        var timer = setInterval(call, interval);
+        function call() {
+          if (i >= repeats) clearInterval(timer);
+          func();
+          i++;
+        }
       }
 
       function getAnchorEl(id, type) {
